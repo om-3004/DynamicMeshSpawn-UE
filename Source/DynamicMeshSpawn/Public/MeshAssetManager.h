@@ -30,8 +30,8 @@ struct FMaterialData {
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
 	UMaterial* Material;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
-	float MaterialColor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Texture")
+	UTexture* Texture;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
 	float MaterialMetallicity;
@@ -51,10 +51,6 @@ struct FTextureData {
 	UTexture* Texture;
 };
 
-/**
- * 
- */
-
 UCLASS(BlueprintType)
 class DYNAMICMESHSPAWN_API UMeshAssetManager : public UDataAsset
 {
@@ -66,4 +62,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
 	TArray<FMaterialData> MaterialData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Texture")
+	TArray<FTextureData> TextureData;
 };
