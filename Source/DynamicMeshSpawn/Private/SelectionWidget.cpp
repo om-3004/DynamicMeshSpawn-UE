@@ -5,10 +5,20 @@
 
 void USelectionWidget::ReceiveMeshData(FMeshData MeshData)
 {
-	OnAssetThumbnailSelected.Broadcast(MeshData);
+	OnMeshAssetThumbnailSelected.Broadcast(MeshData);
 }
 
-void USelectionWidget::InitialializeWidget(UMeshAssetManager* MeshAssetManager)
+void USelectionWidget::ReceiveMaterialData(FMaterialData MaterialData)
+{
+	OnMaterialAssetThumbnailSelected.Broadcast(MaterialData);
+}
+
+void USelectionWidget::ReceiveTextureData(FTextureData TextureData)
+{
+	OnTextureAssetThumbnailSelected.Broadcast(TextureData);
+}
+
+void USelectionWidget::InitializeWidget(UMeshAssetManager* MeshAssetManager)
 {
 	OnMeshDataInitialized(MeshAssetManager);
 }

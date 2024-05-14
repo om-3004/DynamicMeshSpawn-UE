@@ -5,14 +5,33 @@
 
 TSharedRef<SWidget> UMeshSelectionScrollBox::RebuildWidget()
 {
-    MeshSelectionScrollBox = SNew(SMeshSelectionScrollBox).InMeshAssetManager(MeshAssetManager).ThumbnailSizeScale(ThumbnailSizeScale);
-    MeshSelectionScrollBox->OnAssetThumbnailSelected.BindUObject(this, &UMeshSelectionScrollBox::HandleAssetThumbnailSelected);
+    MeshSelectionScrollBox = SNew(SMeshSelectionScrollBox).InMeshAssetManager(MeshAssetManager).ThumbnailSizeScale(ThumbnailSizeScale).InTypeOfAsset(TypeOfAsset);
+    if (TypeOfAsset == EAssetType::MeshData) {
+        MeshSelectionScrollBox->OnMeshAssetThumbnailSelected.BindUObject(this, &UMeshSelectionScrollBox::HandleMeshAssetThumbnailSelected);
+    }
+    else if (TypeOfAsset == EAssetType::MaterialData) {
+        MeshSelectionScrollBox->OnMaterialAssetThumbnailSelected.BindUObject(this, &UMeshSelectionScrollBox::HandleMaterialAssetThumbnailSelected);
+    }
+    else {
+		MeshSelectionScrollBox->OnTextureAssetThumbnailSelected.BindUObject(this, &UMeshSelectionScrollBox::HandleTextureAssetThumbnailSelected);
+    }
+    
     return MeshSelectionScrollBox.ToSharedRef();
 }
 
-void UMeshSelectionScrollBox::HandleAssetThumbnailSelected(const FMeshData& MeshData)
+void UMeshSelectionScrollBox::HandleMeshAssetThumbnailSelected(const FMeshData& MeshData)
 {
-    OnAssetThumbnailSelected.Broadcast(MeshData);
+    OnMeshAssetThumbnailSelected.Broadcast(MeshData);
+}
+
+void UMeshSelectionScrollBox::HandleMaterialAssetThumbnailSelected(const FMaterialData& MaterialData)
+{
+    OnMaterialAssetThumbnailSelected.Broadcast(MaterialData);
+}
+
+void UMeshSelectionScrollBox::HandleTextureAssetThumbnailSelected(const FTextureData& TextureData)
+{
+    OnTextureAssetThumbnailSelected.Broadcast(TextureData);
 }
 
 const FText UMeshSelectionScrollBox::GetPaletteCategory()

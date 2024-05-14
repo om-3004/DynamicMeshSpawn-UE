@@ -8,9 +8,6 @@
 #include "MeshSelectionScrollBox.h"
 #include "SelectionWidget.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class DYNAMICMESHSPAWN_API USelectionWidget : public UUserWidget
 {
@@ -22,12 +19,24 @@ public:
 	void OnMeshDataInitialized(UMeshAssetManager* MeshAssetManager);
 
 	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
-	FAssetThumbnailSelectedEvent OnAssetThumbnailSelected;
+	FMeshAssetThumbnailSelectedEvent OnMeshAssetThumbnailSelected;
+
+	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
+	FMaterialAssetThumbnailSelectedEvent OnMaterialAssetThumbnailSelected;
+
+	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
+	FTextureAssetThumbnailSelectedEvent OnTextureAssetThumbnailSelected;
 	
 	UFUNCTION(BlueprintCallable, Category = "Selection Widget")
 	void ReceiveMeshData(FMeshData MeshData);
 
-	void InitialializeWidget(UMeshAssetManager* MeshAssetManager);
+	UFUNCTION(BlueprintCallable, Category = "Selection Widget")
+	void ReceiveMaterialData(FMaterialData MaterialData);
+
+	UFUNCTION(BlueprintCallable, Category = "Selection Widget")
+	void ReceiveTextureData(FTextureData TextureData);
+
+	void InitializeWidget(UMeshAssetManager* MeshAssetManager);
 
 	virtual void NativeConstruct() override;
 };

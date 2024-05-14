@@ -31,7 +31,7 @@ struct FMaterialData {
 	UMaterial* Material;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Texture")
-	UTexture* Texture;
+	UTexture* Thumbnail;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
 	float MaterialMetallicity;
@@ -48,7 +48,7 @@ struct FTextureData {
 	FString TextureName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Texture")
-	UTexture* Texture;
+	UTexture* Thumbnail;
 };
 
 UCLASS(BlueprintType)

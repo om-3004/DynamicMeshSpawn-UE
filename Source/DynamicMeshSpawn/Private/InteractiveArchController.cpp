@@ -24,7 +24,7 @@ void AInteractiveArchController::BeginPlay()
 		SelectionWidget = CreateWidget<USelectionWidget>(this, SelectionWidgetClassRef);
 		if (SelectionWidget)
 		{
-			SelectionWidget->OnAssetThumbnailSelected.AddDynamic(this, &AInteractiveArchController::SpawnMeshFromMeshData);
+			SelectionWidget->OnMeshAssetThumbnailSelected.AddDynamic(this, &AInteractiveArchController::SpawnMeshFromMeshData);
 		}
 	}
 }
@@ -86,10 +86,11 @@ void AInteractiveArchController::ProcessMouseClick()
 			if (HitResult.GetActor())
 			{
 				LastHitLocation = HitResult.Location;
+				
 				if (SelectionWidget && !SelectionWidget->IsInViewport())
 				{
 					SelectionWidget->AddToViewport();
-					SelectionWidget->InitialializeWidget(MeshAssetManager);
+					SelectionWidget->InitializeWidget(MeshAssetManager);
 				}
 
 				//OnFloorDetected();

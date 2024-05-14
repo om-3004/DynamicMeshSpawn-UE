@@ -8,9 +8,6 @@
 #include "SelectionWidget.h"
 #include "InteractiveArchController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class DYNAMICMESHSPAWN_API AInteractiveArchController : public APlayerController
 {
