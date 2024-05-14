@@ -13,6 +13,7 @@ class DYNAMICMESHSPAWN_API SMeshSelectionScrollBox : public SCompoundWidget
 {
 
 	TSharedPtr<SScrollBox> ScrollBox;
+	TSharedPtr<SBorder> Border;
 
 public:
 	SLATE_BEGIN_ARGS(SMeshSelectionScrollBox)
