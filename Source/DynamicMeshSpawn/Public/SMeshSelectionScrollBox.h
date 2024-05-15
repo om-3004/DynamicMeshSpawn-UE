@@ -42,7 +42,7 @@ public:
 	void RefreshMeshAssetThumbnails();
 	void RefreshMaterialAssetThumbnails();
 	void RefreshTextureAssetThumbnails();
-	
+	 
 	FMeshAssetThumbnailSelected OnMeshAssetThumbnailSelected;
 	FMaterialAssetThumbnailSelected OnMaterialAssetThumbnailSelected;
 	FTextureAssetThumbnailSelected OnTextureAssetThumbnailSelected;

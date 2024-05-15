@@ -6,12 +6,15 @@
 #include "GameFramework/PlayerController.h"
 #include "MeshAssetManager.h"
 #include "SelectionWidget.h"
+#include "MyStaticMeshActor.h"
 #include "InteractiveArchController.generated.h"
 
 UCLASS()
 class DYNAMICMESHSPAWN_API AInteractiveArchController : public APlayerController
 {
 	GENERATED_BODY()
+
+	AMyStaticMeshActor* SpawnedMesh;
 	
 protected:
 	AInteractiveArchController();
@@ -30,9 +33,14 @@ protected:
 
 	UFUNCTION()
 	void SpawnMeshFromMeshData(const FMeshData& MeshData);
+	void ApplyMaterial(const FMaterialData& MaterialData);
+	void ApplyTexture(const FTextureData& TextureData);
 
 	UPROPERTY()
 	FVector LastHitLocation;
+
+	UPROPERTY()
+	FVector PreviousHitLocation;
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;

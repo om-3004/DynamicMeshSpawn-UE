@@ -14,8 +14,17 @@ class DYNAMICMESHSPAWN_API USelectionWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+
+	UPROPERTY(meta = (BindWidget))
+	UMeshSelectionScrollBox* MeshSelectionScrollBox;
+
+	UPROPERTY(meta = (BindWidget))
+	UMeshSelectionScrollBox* MaterialSelectionScrollBox;
+
+	UPROPERTY(meta = (BindWidget))
+	UMeshSelectionScrollBox* TextureSelectionScrollBox;
 	
-	UFUNCTION(BlueprintImplementableEvent, Category = "Selection Widget")
+	/*UFUNCTION(BlueprintImplementableEvent, Category = "Selection Widget")
 	void OnMeshDataInitialized(UMeshAssetManager* MeshAssetManager);
 
 	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
@@ -26,7 +35,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
 	FTextureAssetThumbnailSelectedEvent OnTextureAssetThumbnailSelected;
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Selection Widget")
 	void ReceiveMeshData(FMeshData MeshData);
 
@@ -38,5 +47,5 @@ public:
 
 	void InitializeWidget(UMeshAssetManager* MeshAssetManager);
 
-	virtual void NativeConstruct() override;
+	virtual void NativeConstruct() override;*/
 };

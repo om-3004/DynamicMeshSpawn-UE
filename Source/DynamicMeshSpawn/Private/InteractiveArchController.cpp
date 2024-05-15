@@ -13,6 +13,7 @@ AInteractiveArchController::AInteractiveArchController()
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
+	SpawnedMesh = nullptr;
 }
 
 void AInteractiveArchController::BeginPlay()
@@ -24,7 +25,9 @@ void AInteractiveArchController::BeginPlay()
 		SelectionWidget = CreateWidget<USelectionWidget>(this, SelectionWidgetClassRef);
 		if (SelectionWidget)
 		{
-			SelectionWidget->OnMeshAssetThumbnailSelected.AddDynamic(this, &AInteractiveArchController::SpawnMeshFromMeshData);
+			SelectionWidget->MeshSelectionScrollBox->OnMeshAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::SpawnMeshFromMeshData);
+			SelectionWidget->MaterialSelectionScrollBox->OnMaterialAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyMaterial);
+			SelectionWidget->TextureSelectionScrollBox->OnTextureAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyTexture);
 		}
 	}
 }
@@ -33,6 +36,12 @@ void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData
 {
 	if (MeshData.StaticMesh)
 	{
+		if (PreviousHitLocation == LastHitLocation)
+		{
+			if(SpawnedMesh)
+				SpawnedMesh->Destroy();
+		}
+
 		FBox BoundingBox = MeshData.StaticMesh->GetBoundingBox();
 		FVector MinBounds = BoundingBox.Min;
 		FVector MaxBounds = BoundingBox.Max;
@@ -40,12 +49,23 @@ void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData
 
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		if (AStaticMeshActor* SpawnedMesh = GetWorld()->SpawnActor<AStaticMeshActor>(LastHitLocation + FVector(0, 0, OffsetZ), FRotator::ZeroRotator, SpawnParameters))
+		SpawnedMesh = GetWorld()->SpawnActor<AMyStaticMeshActor>(LastHitLocation + FVector(0, 0, OffsetZ), FRotator::ZeroRotator, SpawnParameters);
+
+		if (SpawnedMesh)
 		{
 			SpawnedMesh->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
 			SpawnedMesh->GetStaticMeshComponent()->SetStaticMesh(MeshData.StaticMesh);
 		}
 	}
+}
+
+void AInteractiveArchController::ApplyMaterial(const FMaterialData& MaterialData)
+{
+	
+}
+
+void AInteractiveArchController::ApplyTexture(const FTextureData& TextureData)
+{
 }
 
 void AInteractiveArchController::SetupInputComponent()
@@ -83,14 +103,25 @@ void AInteractiveArchController::ProcessMouseClick()
 
 		if (GetWorld()->LineTraceSingleByChannel(HitResult, WorldLocation, TraceEnd, ECC_Visibility, QueryParams))
 		{
-			if (HitResult.GetActor())
+			if (AActor* HitActor = HitResult.GetActor())
 			{
+				if (AMyStaticMeshActor* StaticMeshActor = Cast<AMyStaticMeshActor>(HitActor)) {
+					SelectionWidget->MeshSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
+					SelectionWidget->MaterialSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
+					SelectionWidget->TextureSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
+				}
+				else {
+					SelectionWidget->MeshSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
+					SelectionWidget->MaterialSelectionScrollBox->SetVisibility(ESlateVisibility::Hidden);
+					SelectionWidget->TextureSelectionScrollBox->SetVisibility(ESlateVisibility::Hidden);
+				}
+				UPROPERTY()
+				PreviousHitLocation = LastHitLocation;
 				LastHitLocation = HitResult.Location;
 				
 				if (SelectionWidget && !SelectionWidget->IsInViewport())
 				{
 					SelectionWidget->AddToViewport();
-					SelectionWidget->InitializeWidget(MeshAssetManager);
 				}
 
 				//OnFloorDetected();

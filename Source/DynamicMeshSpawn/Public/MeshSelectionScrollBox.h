@@ -8,10 +8,9 @@
 #include "SMeshSelectionScrollBox.h"
 #include "MeshSelectionScrollBox.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMeshAssetThumbnailSelectedEvent, const FMeshData&, MeshData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMaterialAssetThumbnailSelectedEvent, const FMaterialData&, MaterialData);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTextureAssetThumbnailSelectedEvent, const FTextureData&, TextureData);
-
+DECLARE_DELEGATE_OneParam(FMeshAssetThumbnailSelectedEvent, const FMeshData&);
+DECLARE_DELEGATE_OneParam(FMaterialAssetThumbnailSelectedEvent, const FMaterialData&);
+DECLARE_DELEGATE_OneParam(FTextureAssetThumbnailSelectedEvent, const FTextureData&);
 
 UCLASS()
 class DYNAMICMESHSPAWN_API UMeshSelectionScrollBox : public UWidget
@@ -25,17 +24,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MeshData")
 	float ThumbnailSizeScale = 3.5f;
 
-	UPROPERTY(BlueprintAssignable, Category = "Base Widget")
-	FMeshAssetThumbnailSelectedEvent OnMeshAssetThumbnailSelected;
-
-	UPROPERTY(BlueprintAssignable, Category = "Base Widget")
-	FMaterialAssetThumbnailSelectedEvent OnMaterialAssetThumbnailSelected;
-
-	UPROPERTY(BlueprintAssignable, Category = "Base Widget")
-	FTextureAssetThumbnailSelectedEvent OnTextureAssetThumbnailSelected;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh Data")
 	EAssetType TypeOfAsset;
+
+
+	FMeshAssetThumbnailSelectedEvent OnMeshAssetThumbnailSelected;
+	FMaterialAssetThumbnailSelectedEvent OnMaterialAssetThumbnailSelected;
+	FTextureAssetThumbnailSelectedEvent OnTextureAssetThumbnailSelected;
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;

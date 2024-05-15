@@ -21,17 +21,17 @@ TSharedRef<SWidget> UMeshSelectionScrollBox::RebuildWidget()
 
 void UMeshSelectionScrollBox::HandleMeshAssetThumbnailSelected(const FMeshData& MeshData)
 {
-    OnMeshAssetThumbnailSelected.Broadcast(MeshData);
+    OnMeshAssetThumbnailSelected.ExecuteIfBound(MeshData);
 }
 
 void UMeshSelectionScrollBox::HandleMaterialAssetThumbnailSelected(const FMaterialData& MaterialData)
 {
-    OnMaterialAssetThumbnailSelected.Broadcast(MaterialData);
+    OnMaterialAssetThumbnailSelected.ExecuteIfBound(MaterialData);
 }
 
 void UMeshSelectionScrollBox::HandleTextureAssetThumbnailSelected(const FTextureData& TextureData)
 {
-    OnTextureAssetThumbnailSelected.Broadcast(TextureData);
+    OnTextureAssetThumbnailSelected.ExecuteIfBound(TextureData);
 }
 
 const FText UMeshSelectionScrollBox::GetPaletteCategory()
@@ -45,6 +45,7 @@ void UMeshSelectionScrollBox::SynchronizeProperties()
     if (MeshSelectionScrollBox.IsValid())
     {
         MeshSelectionScrollBox->MeshAssetManager = MeshAssetManager;
+        MeshSelectionScrollBox->TypeOfAsset = TypeOfAsset;
         MeshSelectionScrollBox->ThumbnailSizeScale = ThumbnailSizeScale;
         MeshSelectionScrollBox->RefreshAssetThumbnails();
     }
