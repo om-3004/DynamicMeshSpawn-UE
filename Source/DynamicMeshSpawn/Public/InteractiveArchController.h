@@ -37,12 +37,19 @@ protected:
 	void ApplyTexture(const FTextureData& TextureData);
 
 	UPROPERTY()
+	FVector CurrentHitLocation;
+
+	UPROPERTY()
 	FVector LastHitLocation;
 
 	UPROPERTY()
-	FVector PreviousHitLocation;
+	AMyStaticMeshActor* CurrentActor;
+
+	UPROPERTY()
+	bool isUIHidden;
 
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	void ProcessMouseClick();
+	void ToggleVisibility();
 };

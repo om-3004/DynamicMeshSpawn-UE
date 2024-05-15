@@ -14,6 +14,7 @@ AInteractiveArchController::AInteractiveArchController()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 	SpawnedMesh = nullptr;
+	isUIHidden = false;
 }
 
 void AInteractiveArchController::BeginPlay()
@@ -36,11 +37,13 @@ void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData
 {
 	if (MeshData.StaticMesh)
 	{
-		if (PreviousHitLocation == LastHitLocation)
+		if (LastHitLocation == CurrentHitLocation)
 		{
-			if(SpawnedMesh)
-				SpawnedMesh->Destroy();
+			if (CurrentActor)
+				CurrentActor->Destroy();
 		}
+
+		LastHitLocation = CurrentHitLocation;
 
 		FBox BoundingBox = MeshData.StaticMesh->GetBoundingBox();
 		FVector MinBounds = BoundingBox.Min;
@@ -49,19 +52,22 @@ void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData
 
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnedMesh = GetWorld()->SpawnActor<AMyStaticMeshActor>(LastHitLocation + FVector(0, 0, OffsetZ), FRotator::ZeroRotator, SpawnParameters);
+		CurrentActor = GetWorld()->SpawnActor<AMyStaticMeshActor>(CurrentHitLocation + FVector(0, 0, OffsetZ), FRotator::ZeroRotator, SpawnParameters);
 
-		if (SpawnedMesh)
+		if (CurrentActor)
 		{
-			SpawnedMesh->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
-			SpawnedMesh->GetStaticMeshComponent()->SetStaticMesh(MeshData.StaticMesh);
+			CurrentActor->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
+			CurrentActor->GetStaticMeshComponent()->SetStaticMesh(MeshData.StaticMesh);
 		}
 	}
 }
 
 void AInteractiveArchController::ApplyMaterial(const FMaterialData& MaterialData)
 {
-	
+	if (CurrentActor && MaterialData.Material)
+	{
+		CurrentActor->GetStaticMeshComponent()->SetMaterial(0, MaterialData.Material);
+	}
 }
 
 void AInteractiveArchController::ApplyTexture(const FTextureData& TextureData)
@@ -78,9 +84,14 @@ void AInteractiveArchController::SetupInputComponent()
 
 		UInputAction* ClickAction = NewObject<UInputAction>();
 		ClickAction->ValueType = EInputActionValueType::Boolean;
-
 		InputMappingContext->MapKey(ClickAction, EKeys::LeftMouseButton);
+
+		UInputAction* ToggleVisibilityOfWidget = NewObject<UInputAction>();
+		ToggleVisibilityOfWidget->ValueType = EInputActionValueType::Boolean;
+		InputMappingContext->MapKey(ToggleVisibilityOfWidget, EKeys::Tab);
+
 		EnhancedInputComponent->BindAction(ClickAction,ETriggerEvent::Triggered, this, &AInteractiveArchController::ProcessMouseClick);
+		EnhancedInputComponent->BindAction(ToggleVisibilityOfWidget, ETriggerEvent::Completed, this, &AInteractiveArchController::ToggleVisibility);
 
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{
@@ -109,15 +120,14 @@ void AInteractiveArchController::ProcessMouseClick()
 					SelectionWidget->MeshSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
 					SelectionWidget->MaterialSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
 					SelectionWidget->TextureSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
+					CurrentActor = StaticMeshActor;
 				}
 				else {
 					SelectionWidget->MeshSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
 					SelectionWidget->MaterialSelectionScrollBox->SetVisibility(ESlateVisibility::Hidden);
 					SelectionWidget->TextureSelectionScrollBox->SetVisibility(ESlateVisibility::Hidden);
 				}
-				UPROPERTY()
-				PreviousHitLocation = LastHitLocation;
-				LastHitLocation = HitResult.Location;
+				CurrentHitLocation = HitResult.Location;
 				
 				if (SelectionWidget && !SelectionWidget->IsInViewport())
 				{
@@ -126,6 +136,23 @@ void AInteractiveArchController::ProcessMouseClick()
 
 				//OnFloorDetected();
 			}
+		}
+	}
+}
+
+void AInteractiveArchController::ToggleVisibility()
+{
+	if (SelectionWidget->IsInViewport())
+	{
+		if (isUIHidden)
+		{
+			SelectionWidget->SetVisibility(ESlateVisibility::Visible);
+			isUIHidden = false;
+		}
+		else
+		{
+			SelectionWidget->SetVisibility(ESlateVisibility::Hidden);
+			isUIHidden = true;
 		}
 	}
 }
