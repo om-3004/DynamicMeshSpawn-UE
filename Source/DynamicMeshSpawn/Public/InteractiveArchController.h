@@ -28,9 +28,6 @@ protected:
 	UPROPERTY()
 	USelectionWidget* SelectionWidget;
 
-	/*UFUNCTION(BlueprintImplementableEvent, Category = "Trace")
-	void OnFloorDetected();*/
-
 	UFUNCTION()
 	void SpawnMeshFromMeshData(const FMeshData& MeshData);
 	void ApplyMaterial(const FMaterialData& MaterialData);

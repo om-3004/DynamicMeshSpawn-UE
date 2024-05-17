@@ -26,9 +26,17 @@ void AInteractiveArchController::BeginPlay()
 		SelectionWidget = CreateWidget<USelectionWidget>(this, SelectionWidgetClassRef);
 		if (SelectionWidget)
 		{
-			SelectionWidget->MeshSelectionScrollBox->OnMeshAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::SpawnMeshFromMeshData);
-			SelectionWidget->MaterialSelectionScrollBox->OnMaterialAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyMaterial);
-			SelectionWidget->TextureSelectionScrollBox->OnTextureAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyTexture);
+			SelectionWidget->ScrollBox1->OnMeshAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::SpawnMeshFromMeshData);
+			SelectionWidget->ScrollBox1->OnMaterialAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyMaterial);
+			SelectionWidget->ScrollBox1->OnTextureAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyTexture);
+
+			SelectionWidget->ScrollBox2->OnMeshAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::SpawnMeshFromMeshData);
+			SelectionWidget->ScrollBox2->OnMaterialAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyMaterial);
+			SelectionWidget->ScrollBox2->OnTextureAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyTexture);
+
+			SelectionWidget->ScrollBox3->OnMeshAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::SpawnMeshFromMeshData);
+			SelectionWidget->ScrollBox3->OnMaterialAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyMaterial);
+			SelectionWidget->ScrollBox3->OnTextureAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyTexture);
 		}
 	}
 }
@@ -66,12 +74,39 @@ void AInteractiveArchController::ApplyMaterial(const FMaterialData& MaterialData
 {
 	if (CurrentActor && MaterialData.Material)
 	{
-		CurrentActor->GetStaticMeshComponent()->SetMaterial(0, MaterialData.Material);
+		UMaterialInstanceDynamic* DynamicMaterialInstance = UMaterialInstanceDynamic::Create(MaterialData.Material, this);
+
+		if (DynamicMaterialInstance)
+		{
+			UStaticMeshComponent* StaticMeshComponent = CurrentActor->GetStaticMeshComponent();
+			StaticMeshComponent->SetMaterial(0, MaterialData.Material);
+
+			//DynamicMaterialInstance->SetScalarParameterValue(FName("Metallic"), MaterialData.MaterialMetallicity);
+			//DynamicMaterialInstance->SetScalarParameterValue(FName("Roughness"), MaterialData.MaterialRoughness);
+
+			//float metallicValue;
+
+			//FString FloatMessage = FString::Printf(TEXT("Metallic: %f"), DynamicMaterialInstance->GetScalarParameterValue(FName("Metallic"), metallicValue));
+			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FloatMessage);
+
+			//FloatMessage = FString::Printf(TEXT("Roughness: %f"), DynamicMaterialInstance->GetScalarParameterValue(FName("Roughness"), metallicValue));
+			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FloatMessage);
+		}
+
 	}
 }
 
 void AInteractiveArchController::ApplyTexture(const FTextureData& TextureData)
 {
+	if (CurrentActor && TextureData.Thumbnail)
+	{
+		UMaterialInstanceDynamic* MaterialInstance = Cast<UMaterialInstanceDynamic>(CurrentActor->GetStaticMeshComponent()->GetMaterial(0));
+		if(!MaterialInstance) {
+			MaterialInstance = UMaterialInstanceDynamic::Create(CurrentActor->GetStaticMeshComponent()->GetMaterial(0), this);
+		}
+		MaterialInstance->SetTextureParameterValue(FName("Texture"), TextureData.Thumbnail);
+		CurrentActor->GetStaticMeshComponent()->SetMaterial(0, MaterialInstance);
+	}
 }
 
 void AInteractiveArchController::SetupInputComponent()
@@ -117,15 +152,27 @@ void AInteractiveArchController::ProcessMouseClick()
 			if (AActor* HitActor = HitResult.GetActor())
 			{
 				if (AMyStaticMeshActor* StaticMeshActor = Cast<AMyStaticMeshActor>(HitActor)) {
-					SelectionWidget->MeshSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
-					SelectionWidget->MaterialSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
-					SelectionWidget->TextureSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
+					SelectionWidget->ScrollBox1->SetVisibility(ESlateVisibility::Visible);
+					SelectionWidget->ScrollBox2->SetVisibility(ESlateVisibility::Visible);
+					SelectionWidget->ScrollBox3->SetVisibility(ESlateVisibility::Visible);
 					CurrentActor = StaticMeshActor;
 				}
 				else {
-					SelectionWidget->MeshSelectionScrollBox->SetVisibility(ESlateVisibility::Visible);
-					SelectionWidget->MaterialSelectionScrollBox->SetVisibility(ESlateVisibility::Hidden);
-					SelectionWidget->TextureSelectionScrollBox->SetVisibility(ESlateVisibility::Hidden);
+					if (SelectionWidget->ScrollBox1->TypeOfAsset == EAssetType::MeshData) {
+						SelectionWidget->ScrollBox1->SetVisibility(ESlateVisibility::Visible);
+						SelectionWidget->ScrollBox2->SetVisibility(ESlateVisibility::Hidden);
+						SelectionWidget->ScrollBox3->SetVisibility(ESlateVisibility::Hidden);
+					}
+					else if (SelectionWidget->ScrollBox2->TypeOfAsset == EAssetType::MeshData) {
+						SelectionWidget->ScrollBox2->SetVisibility(ESlateVisibility::Visible);
+						SelectionWidget->ScrollBox1->SetVisibility(ESlateVisibility::Hidden);
+						SelectionWidget->ScrollBox3->SetVisibility(ESlateVisibility::Hidden);
+					}
+					else if (SelectionWidget->ScrollBox3->TypeOfAsset == EAssetType::MeshData) {
+						SelectionWidget->ScrollBox3->SetVisibility(ESlateVisibility::Visible);
+						SelectionWidget->ScrollBox1->SetVisibility(ESlateVisibility::Hidden);
+						SelectionWidget->ScrollBox2->SetVisibility(ESlateVisibility::Hidden);
+					}
 				}
 				CurrentHitLocation = HitResult.Location;
 				
@@ -133,8 +180,6 @@ void AInteractiveArchController::ProcessMouseClick()
 				{
 					SelectionWidget->AddToViewport();
 				}
-
-				//OnFloorDetected();
 			}
 		}
 	}

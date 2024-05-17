@@ -28,7 +28,7 @@ struct FMaterialData {
 	FString MaterialName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
-	UMaterial* Material;
+	UMaterialInterface* Material;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Texture")
 	UTexture* Thumbnail;

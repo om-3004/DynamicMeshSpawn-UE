@@ -16,36 +16,11 @@ class DYNAMICMESHSPAWN_API USelectionWidget : public UUserWidget
 public:
 
 	UPROPERTY(meta = (BindWidget))
-	UMeshSelectionScrollBox* MeshSelectionScrollBox;
+	UMeshSelectionScrollBox* ScrollBox1;
 
 	UPROPERTY(meta = (BindWidget))
-	UMeshSelectionScrollBox* MaterialSelectionScrollBox;
+	UMeshSelectionScrollBox* ScrollBox2;
 
 	UPROPERTY(meta = (BindWidget))
-	UMeshSelectionScrollBox* TextureSelectionScrollBox;
-	
-	/*UFUNCTION(BlueprintImplementableEvent, Category = "Selection Widget")
-	void OnMeshDataInitialized(UMeshAssetManager* MeshAssetManager);
-
-	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
-	FMeshAssetThumbnailSelectedEvent OnMeshAssetThumbnailSelected;
-
-	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
-	FMaterialAssetThumbnailSelectedEvent OnMaterialAssetThumbnailSelected;
-
-	UPROPERTY(BlueprintAssignable, category = "Selection Widget")
-	FTextureAssetThumbnailSelectedEvent OnTextureAssetThumbnailSelected;
-
-	UFUNCTION(BlueprintCallable, Category = "Selection Widget")
-	void ReceiveMeshData(FMeshData MeshData);
-
-	UFUNCTION(BlueprintCallable, Category = "Selection Widget")
-	void ReceiveMaterialData(FMaterialData MaterialData);
-
-	UFUNCTION(BlueprintCallable, Category = "Selection Widget")
-	void ReceiveTextureData(FTextureData TextureData);
-
-	void InitializeWidget(UMeshAssetManager* MeshAssetManager);
-
-	virtual void NativeConstruct() override;*/
+	UMeshSelectionScrollBox* ScrollBox3;
 };
