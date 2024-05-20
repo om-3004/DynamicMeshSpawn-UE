@@ -5,52 +5,52 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 
-#include "Camera/CameraComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
-#include "Components/BoxComponent.h"
 
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 
-#include "OrthographicViewPawn.generated.h"
+#include "IsometricViewPawn.generated.h"
 
 UCLASS()
-class DYNAMICMESHSPAWN_API AOrthographicViewPawn : public APawn
+class DYNAMICMESHSPAWN_API AIsometricViewPawn : public APawn
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
-	class UCapsuleComponent* CapsuleComponent;
-
+	USpringArmComponent* SpringArmComponent;
+ 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* SpringArmComponent;
-
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* CameraComponent;
-
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
-	class UBoxComponent* CameraCollisionComponent;
+	UCameraComponent* CameraComponent;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
 	UFloatingPawnMovement* FloatingPawnMovement;
 
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
+	float TargetSpringArmYaw;
+
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
+	float RotationSpeed;
+
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
+	void CameraLeftRotation();
+
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
+	void CameraRightRotation();
+
+	UFUNCTION(BlueprintCallable, meta = (AllowPrivateAccess = "true"))
+	void CameraZoom(const FInputActionValue& ActionValue); 
 
 public:
 	// Sets default values for this pawn's properties
-	AOrthographicViewPawn();
+	AIsometricViewPawn();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	//UFUNCTION(BlueprintCallable)
-	void Move(const FInputActionValue& Value);
-
-	//UFUNCTION(BlueprintCallable)
-	void Zoom(const FInputActionValue& Value);
 
 public:	
 	// Called every frame
