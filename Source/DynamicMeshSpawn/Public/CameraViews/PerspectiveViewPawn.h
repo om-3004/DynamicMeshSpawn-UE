@@ -11,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/CapsuleComponent.h"
 #include "PerspectiveViewPawn.generated.h"
 
 UCLASS()
@@ -19,10 +20,7 @@ class DYNAMICMESHSPAWN_API APerspectiveViewPawn : public APawn
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
-	class USceneComponent* SceneComponent;
-
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* SpringArmComponent;
+	class UCapsuleComponent* CapsuleComponent;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* CameraComponent;
