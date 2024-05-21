@@ -79,7 +79,7 @@ void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData
 
 		if (GetPawn())
 		{
-			GetPawn()->SetActorLocation(CurrentHitLocation + FVector{0, 0, 200});
+			GetPawn()->SetActorLocation(CurrentHitLocation + FVector{0, 0, 100});
 		}
 	}
 }
@@ -167,7 +167,7 @@ void AInteractiveArchController::ProcessMouseClick()
 					CurrentActor = StaticMeshActor;
 					if (GetPawn())
 					{
-						GetPawn()->SetActorLocation(HitActor->GetActorLocation() + FVector{0, 0, 200});
+						GetPawn()->SetActorLocation(HitActor->GetActorLocation() + FVector{0, 0, 50});
 					}
 				}
 				else {

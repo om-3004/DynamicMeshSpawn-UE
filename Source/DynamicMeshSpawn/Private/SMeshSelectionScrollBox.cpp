@@ -4,25 +4,51 @@
 #include "SMeshSelectionScrollBox.h"
 #include "SlateOptMacros.h"
 #include "Brushes/SlateColorBrush.h"
-#include "MeshSelectionScrollBox.h"
+//#include "MeshSelectionScrollBox.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
 void SMeshSelectionScrollBox::Construct(const FArguments& InArgs)
 {
-	ScrollBox = SNew(SScrollBox);
+	RootBorder = SNew(SBorder);
+
+	FSlateColorBrush* ColorBrush = new FSlateColorBrush(FLinearColor(0.1843137254901961f, 0.23529411764705882f, 0.49411764705882355f, 1.0f));
+	//FSlateColorBrush* ColorBrush = new FSlateColorBrush(FLinearColor(0.12549f, 0.043137f, 0.101961f, 1.0f));
+	ColorBrush->DrawAs = ESlateBrushDrawType::RoundedBox;
+
+	FSlateBrushOutlineSettings OutlineSettings{};
+	OutlineSettings.CornerRadii = FVector4{5.f, 5.f, 5.f, 5.f};
+	OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+	ColorBrush->OutlineSettings = OutlineSettings;
+	RootBorder->SetBorderImage(ColorBrush);
+
+	RootVerticalBox = SNew(SVerticalBox);
+	RootBoxName = SNew(STextBlock).Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 20)).ColorAndOpacity(FColor::White);
+	ScrollBox= SNew(SScrollBox).Orientation(Orient_Horizontal);
 
 	MeshAssetManager = InArgs._InMeshAssetManager;
 	ThumbnailSizeScale = InArgs._ThumbnailSizeScale;
 	TypeOfAsset = InArgs._InTypeOfAsset;
 
+	RefreshAssetThumbnails();
+
+	RootVerticalBox->AddSlot().HAlign(HAlign_Center).AutoHeight()
+		[
+			RootBoxName.ToSharedRef()
+		];
+
+	RootVerticalBox->AddSlot().HAlign(HAlign_Center)
+		[
+			ScrollBox.ToSharedRef()
+		];
+
+	RootBorder->SetContent(RootVerticalBox.ToSharedRef());
+	
 	ChildSlot
 	[
-		ScrollBox.ToSharedRef()
+		RootBorder.ToSharedRef()
 	];
 
-	ScrollBox->SetOrientation(Orient_Horizontal);
-	RefreshAssetThumbnails();
 }
 
 void SMeshSelectionScrollBox::RefreshAssetThumbnails()
@@ -42,6 +68,7 @@ void SMeshSelectionScrollBox::RefreshAssetThumbnails()
 
 void SMeshSelectionScrollBox::RefreshMeshAssetThumbnails()
 {
+	RootBoxName->SetText(FText::FromString("Mesh Selector"));
 	ScrollBox->ClearChildren();
 	if (MeshAssetManager.IsValid())
 	{
@@ -49,49 +76,53 @@ void SMeshSelectionScrollBox::RefreshMeshAssetThumbnails()
 		{
 			if (UTexture2D* ThumbnailTexture = Cast<UTexture2D>(MeshData.Thumbnail))
 			{
+				TSharedPtr<STextBlock> MeshName = SNew(STextBlock).Text(FText::FromString(MeshData.MeshName)).Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 20)).ColorAndOpacity(FSlateColor(FLinearColor(0.946289f, 0.984314f, 0.626183f, 1.0f)));
 
-				TSharedPtr<SVerticalBox> VerticleBox = SNew(SVerticalBox);
+				FSlateBrush* SlateBrush = new FSlateBrush();
+				SlateBrush->DrawAs = ESlateBrushDrawType::RoundedBox;
+				FSlateBrushOutlineSettings OutlineSettings{};
+				OutlineSettings.CornerRadii = FVector4{ 5.f , 5.f ,5.f , 5.f };
+				OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+				SlateBrush->OutlineSettings = OutlineSettings;
 
-				TSharedPtr<SBox> SizeBox = SNew(SBox);
-				SizeBox->SetWidthOverride(TAttribute<FOptionalSize>{200.f});
-				SizeBox->SetHeightOverride(TAttribute<FOptionalSize>{200.f});
-				SizeBox->SetPadding(FMargin{ 5.f });
+				SlateBrush->SetResourceObject(MeshData.Thumbnail);
+				//SlateBrush->ImageSize = FVector2D(ThumbnailTexture->GetSizeX() * ThumbnailSizeScale, ThumbnailTexture->GetSizeY());
+				SlateBrush->ImageSize = FVector2D(ThumbnailSizeScale);
 
-				FSlateColorBrush* Brush = new FSlateColorBrush(FLinearColor{ 0.208745, 0.788352, 1.0 });
-				TSharedPtr<SBorder> BorderBox = SNew(SBorder).BorderImage(Brush);
+				TSharedPtr<SImage> ThumbnailImage = SNew(SImage).Image(SlateBrush).Cursor(EMouseCursor::Hand)
+					.OnMouseButtonDown_Lambda([this, &MeshData](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+						if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
+							OnMeshAssetThumbnailSelected.ExecuteIfBound(MeshData);
+							return FReply::Handled();
+						}
+						return FReply::Unhandled();
+					});
 
-				FSlateBrush* ThumbanailBrush = new FSlateBrush;
-				ThumbanailBrush->SetResourceObject(ThumbnailTexture);
-				ThumbanailBrush->ImageSize = FVector2D(ThumbnailTexture->GetSizeX() * ThumbnailSizeScale, ThumbnailTexture->GetSizeY());
+				TSharedPtr<SBorder> ScrollBoxBorder = SNew(SBorder);
+				FSlateColorBrush* ColorBrush = new FSlateColorBrush(FLinearColor(0.946289f, 0.984314f, 0.626183f, 1.0f));
+				ColorBrush->DrawAs = ESlateBrushDrawType::RoundedBox;
+				OutlineSettings.CornerRadii = FVector4{ 5.f ,5.f ,5.f ,5.f };
+				OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+				ColorBrush->OutlineSettings = OutlineSettings;
 
-				TSharedPtr<SImage> ThumbnailImage = SNew(SImage).Image(ThumbanailBrush).Cursor(EMouseCursor::Hand)
-					.OnMouseButtonDown_Lambda([this, MeshData](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
-					if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
-						OnMeshAssetThumbnailSelected.ExecuteIfBound(MeshData);
-						return FReply::Handled();
-					}
-					return FReply::Unhandled();
-						});
+				ScrollBoxBorder->SetBorderImage(ColorBrush);
+				ScrollBoxBorder->SetPadding(FMargin(1, 1, 1, 1));
 
-				TSharedPtr<STextBlock> ThumbnailName = SNew(STextBlock).Text(FText::FromString(MeshData.MeshName)).ColorAndOpacity(FLinearColor{ 0.f, 0.f, 0.f });
+				ScrollBoxBorder->SetContent(ThumbnailImage.ToSharedRef());
+				TSharedPtr<SVerticalBox> ScrollBoxVerticalBox = SNew(SVerticalBox);
 
-				BorderBox->SetContent(ThumbnailImage.ToSharedRef());
-				SizeBox->SetContent(BorderBox.ToSharedRef());
-
-				VerticleBox->AddSlot()
+				ScrollBoxVerticalBox->AddSlot().HAlign(HAlign_Center).Padding(5)
 					[
-						SizeBox.ToSharedRef()
+						ScrollBoxBorder.ToSharedRef()
 					];
-				VerticleBox->AddSlot().HAlign(HAlign_Center).FillHeight(0.2)
+				ScrollBoxVerticalBox->AddSlot().HAlign(HAlign_Center).AutoHeight()
 					[
-						ThumbnailName.ToSharedRef()
+						MeshName.ToSharedRef()
 					];
-
 				ScrollBox->AddSlot()
 					[
-						VerticleBox.ToSharedRef()
+						ScrollBoxVerticalBox.ToSharedRef()
 					];
-
 
 			}
 		}
@@ -100,6 +131,7 @@ void SMeshSelectionScrollBox::RefreshMeshAssetThumbnails()
 
 void SMeshSelectionScrollBox::RefreshMaterialAssetThumbnails()
 {
+	RootBoxName->SetText(FText::FromString("Material Selector"));
 	ScrollBox->ClearChildren();
 	if (MeshAssetManager.IsValid())
 	{
@@ -107,23 +139,20 @@ void SMeshSelectionScrollBox::RefreshMaterialAssetThumbnails()
 		{
 			if (UTexture2D* ThumbnailTexture = Cast<UTexture2D>(MaterialData.Thumbnail))
 			{
+				TSharedPtr<STextBlock> MaterialName = SNew(STextBlock).Text(FText::FromString(MaterialData.MaterialName)).Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 20)).ColorAndOpacity(FSlateColor(FLinearColor(0.946289f, 0.984314f, 0.626183f, 1.0f)));
 
-				TSharedPtr<SVerticalBox> VerticleBox = SNew(SVerticalBox);
+				FSlateBrush* SlateBrush = new FSlateBrush();
+				SlateBrush->DrawAs = ESlateBrushDrawType::RoundedBox;
+				FSlateBrushOutlineSettings OutlineSettings{};
+				OutlineSettings.CornerRadii = FVector4{ 5.f , 5.f ,5.f , 5.f };
+				OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+				SlateBrush->OutlineSettings = OutlineSettings;
 
-				TSharedPtr<SBox> SizeBox = SNew(SBox);
-				SizeBox->SetWidthOverride(TAttribute<FOptionalSize>{200.f});
-				SizeBox->SetHeightOverride(TAttribute<FOptionalSize>{200.f});
-				SizeBox->SetPadding(FMargin{ 5.f });
+				SlateBrush->SetResourceObject(MaterialData.Thumbnail);
+				SlateBrush->ImageSize = FVector2D(ThumbnailSizeScale);
 
-				FSlateColorBrush* Brush = new FSlateColorBrush(FLinearColor{ 0.208745, 0.788352, 1.0 });
-				TSharedPtr<SBorder> BorderBox = SNew(SBorder).BorderImage(Brush);
-
-				FSlateBrush* ThumbanailBrush = new FSlateBrush;
-				ThumbanailBrush->SetResourceObject(ThumbnailTexture);
-				ThumbanailBrush->ImageSize = FVector2D(ThumbnailTexture->GetSizeX() * ThumbnailSizeScale, ThumbnailTexture->GetSizeY());
-
-				TSharedPtr<SImage> ThumbnailImage = SNew(SImage).Image(ThumbanailBrush).Cursor(EMouseCursor::Hand)
-					.OnMouseButtonDown_Lambda([this, MaterialData](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+				TSharedPtr<SImage> ThumbnailImage = SNew(SImage).Image(SlateBrush).Cursor(EMouseCursor::Hand)
+					.OnMouseButtonDown_Lambda([this, &MaterialData](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 					if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 						OnMaterialAssetThumbnailSelected.ExecuteIfBound(MaterialData);
 						return FReply::Handled();
@@ -131,25 +160,31 @@ void SMeshSelectionScrollBox::RefreshMaterialAssetThumbnails()
 					return FReply::Unhandled();
 						});
 
-				TSharedPtr<STextBlock> ThumbnailName = SNew(STextBlock).Text(FText::FromString(MaterialData.MaterialName)).ColorAndOpacity(FLinearColor{ 0.f, 0.f, 0.f });
+				TSharedPtr<SBorder> ScrollBoxBorder = SNew(SBorder);
+				FSlateColorBrush* ColorBrush = new FSlateColorBrush(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f));
+				ColorBrush->DrawAs = ESlateBrushDrawType::RoundedBox;
+				OutlineSettings.CornerRadii = FVector4{ 5.f ,5.f ,5.f ,5.f };
+				OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+				ColorBrush->OutlineSettings = OutlineSettings;
 
-				BorderBox->SetContent(ThumbnailImage.ToSharedRef());
-				SizeBox->SetContent(BorderBox.ToSharedRef());
+				ScrollBoxBorder->SetBorderImage(ColorBrush);
+				ScrollBoxBorder->SetPadding(FMargin(1, 1, 1, 1));
 
-				VerticleBox->AddSlot()
+				ScrollBoxBorder->SetContent(ThumbnailImage.ToSharedRef());
+				TSharedPtr<SVerticalBox> ScrollBoxVerticalBox = SNew(SVerticalBox);
+
+				ScrollBoxVerticalBox->AddSlot().HAlign(HAlign_Center).Padding(5)
 					[
-						SizeBox.ToSharedRef()
+						ScrollBoxBorder.ToSharedRef()
 					];
-				VerticleBox->AddSlot().HAlign(HAlign_Center).FillHeight(0.2)
+				ScrollBoxVerticalBox->AddSlot().HAlign(HAlign_Center).AutoHeight()
 					[
-						ThumbnailName.ToSharedRef()
+						MaterialName.ToSharedRef()
 					];
-
 				ScrollBox->AddSlot()
 					[
-						VerticleBox.ToSharedRef()
+						ScrollBoxVerticalBox.ToSharedRef()
 					];
-
 
 			}
 		}
@@ -158,6 +193,7 @@ void SMeshSelectionScrollBox::RefreshMaterialAssetThumbnails()
 
 void SMeshSelectionScrollBox::RefreshTextureAssetThumbnails()
 {
+	RootBoxName->SetText(FText::FromString("Texture Selector"));
 	ScrollBox->ClearChildren();
 	if (MeshAssetManager.IsValid())
 	{
@@ -165,23 +201,20 @@ void SMeshSelectionScrollBox::RefreshTextureAssetThumbnails()
 		{
 			if (UTexture2D* ThumbnailTexture = Cast<UTexture2D>(TextureData.Thumbnail))
 			{
+				TSharedPtr<STextBlock> TextureName = SNew(STextBlock).Text(FText::FromString(TextureData.TextureName)).Font(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 20)).ColorAndOpacity(FSlateColor(FLinearColor(0.946289f, 0.984314f, 0.626183f, 1.0f)));
 
-				TSharedPtr<SVerticalBox> VerticleBox = SNew(SVerticalBox);
+				FSlateBrush* SlateBrush = new FSlateBrush();
+				SlateBrush->DrawAs = ESlateBrushDrawType::RoundedBox;
+				FSlateBrushOutlineSettings OutlineSettings{};
+				OutlineSettings.CornerRadii = FVector4{ 5.f , 5.f ,5.f , 5.f };
+				OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+				SlateBrush->OutlineSettings = OutlineSettings;
 
-				TSharedPtr<SBox> SizeBox = SNew(SBox);
-				SizeBox->SetWidthOverride(TAttribute<FOptionalSize>{200.f});
-				SizeBox->SetHeightOverride(TAttribute<FOptionalSize>{200.f});
-				SizeBox->SetPadding(FMargin{ 5.f });
+				SlateBrush->SetResourceObject(TextureData.Thumbnail);
+				SlateBrush->ImageSize = FVector2D(ThumbnailSizeScale);
 
-				FSlateColorBrush* Brush = new FSlateColorBrush(FLinearColor{ 0.208745, 0.788352, 1.0 });
-				TSharedPtr<SBorder> BorderBox = SNew(SBorder).BorderImage(Brush);
-
-				FSlateBrush* ThumbanailBrush = new FSlateBrush;
-				ThumbanailBrush->SetResourceObject(ThumbnailTexture);
-				ThumbanailBrush->ImageSize = FVector2D(ThumbnailTexture->GetSizeX() * ThumbnailSizeScale, ThumbnailTexture->GetSizeY());
-
-				TSharedPtr<SImage> ThumbnailImage = SNew(SImage).Image(ThumbanailBrush).Cursor(EMouseCursor::Hand)
-					.OnMouseButtonDown_Lambda([this, TextureData](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
+				TSharedPtr<SImage> ThumbnailImage = SNew(SImage).Image(SlateBrush).Cursor(EMouseCursor::Hand)
+					.OnMouseButtonDown_Lambda([this, &TextureData](const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) {
 					if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) {
 						OnTextureAssetThumbnailSelected.ExecuteIfBound(TextureData);
 						return FReply::Handled();
@@ -189,25 +222,31 @@ void SMeshSelectionScrollBox::RefreshTextureAssetThumbnails()
 					return FReply::Unhandled();
 						});
 
-				TSharedPtr<STextBlock> ThumbnailName = SNew(STextBlock).Text(FText::FromString(TextureData.TextureName)).ColorAndOpacity(FLinearColor{ 0.f, 0.f, 0.f });
+				TSharedPtr<SBorder> ScrollBoxBorder = SNew(SBorder);
+				FSlateColorBrush* ColorBrush = new FSlateColorBrush(FLinearColor(0.0f, 0.0f, 0.0f, 1.0f));
+				ColorBrush->DrawAs = ESlateBrushDrawType::RoundedBox;
+				OutlineSettings.CornerRadii = FVector4{ 5.f ,5.f ,5.f ,5.f };
+				OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+				ColorBrush->OutlineSettings = OutlineSettings;
 
-				BorderBox->SetContent(ThumbnailImage.ToSharedRef());
-				SizeBox->SetContent(BorderBox.ToSharedRef());
+				ScrollBoxBorder->SetBorderImage(ColorBrush);
+				ScrollBoxBorder->SetPadding(FMargin(1, 1, 1, 1));
 
-				VerticleBox->AddSlot()
+				ScrollBoxBorder->SetContent(ThumbnailImage.ToSharedRef());
+				TSharedPtr<SVerticalBox> ScrollBoxVerticalBox = SNew(SVerticalBox);
+
+				ScrollBoxVerticalBox->AddSlot().HAlign(HAlign_Center).Padding(5)
 					[
-						SizeBox.ToSharedRef()
+						ScrollBoxBorder.ToSharedRef()
 					];
-				VerticleBox->AddSlot().HAlign(HAlign_Center).FillHeight(0.2)
+				ScrollBoxVerticalBox->AddSlot().HAlign(HAlign_Center).AutoHeight()
 					[
-						ThumbnailName.ToSharedRef()
+						TextureName.ToSharedRef()
 					];
-
 				ScrollBox->AddSlot()
 					[
-						VerticleBox.ToSharedRef()
+						ScrollBoxVerticalBox.ToSharedRef()
 					];
-
 
 			}
 		}

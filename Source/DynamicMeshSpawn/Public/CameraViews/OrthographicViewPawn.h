@@ -52,6 +52,8 @@ protected:
 	//UFUNCTION(BlueprintCallable)
 	void Zoom(const FInputActionValue& Value);
 
+	void Rotate(const FInputActionValue& ActionValue);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

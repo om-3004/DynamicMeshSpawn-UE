@@ -93,9 +93,16 @@ void AOrthographicViewPawn::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		ZoomAction->ValueType = EInputActionValueType::Axis1D;
 
 		FEnhancedActionKeyMapping& ZoomMapping = InputMappingContext->MapKey(ZoomAction, EKeys::MouseWheelAxis);
-		//ZoomMapping.Scale = 1.0f;
+		
+		UInputAction* CameraRotation = NewObject<UInputAction>();
+		CameraRotation->ValueType = EInputActionValueType::Axis1D;
+		FEnhancedActionKeyMapping& MouseXRotation = InputMappingContext->MapKey(CameraRotation, EKeys::MouseX);
+		//MouseXRotation.Modifiers.Add(YXZSwizzleAxisModifier);
+
+
 		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Triggered, this, &AOrthographicViewPawn::Zoom);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AOrthographicViewPawn::Move);
+		EnhancedInputComponent->BindAction(CameraRotation, ETriggerEvent::Triggered, this, &AOrthographicViewPawn::Rotate);
 
 		if (const APlayerController* PlayerController = Cast<APlayerController>(Controller)) {
 			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer())) {
@@ -132,5 +139,17 @@ void AOrthographicViewPawn::Zoom(const FInputActionValue& Value) {
 		//CameraComponent->SetRelativeRotation(FRotator(-90, 0, 0));
 		SpringArmComponent->TargetOffset.Z -= ZoomDelta * 10;
 		SpringArmComponent->TargetOffset.Z = FMath::Clamp(SpringArmComponent->TargetOffset.Z, 0, 1500);
+	}
+}
+
+void AOrthographicViewPawn::Rotate(const FInputActionValue& ActionValue)
+{
+	float MouseX = ActionValue.Get<float>();
+	if (CameraComponent)
+	{
+		FRotator CameraRotation = CameraComponent->GetRelativeRotation();
+
+		CameraRotation.Roll += MouseX;
+		CameraComponent->SetRelativeRotation(CameraRotation);
 	}
 }

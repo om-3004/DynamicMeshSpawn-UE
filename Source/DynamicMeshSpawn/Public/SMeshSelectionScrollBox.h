@@ -21,8 +21,10 @@ enum class EAssetType : uint8 {
 class DYNAMICMESHSPAWN_API SMeshSelectionScrollBox : public SCompoundWidget
 {
 
+	TSharedPtr<SBorder> RootBorder;
+	TSharedPtr<STextBlock> RootBoxName;
 	TSharedPtr<SScrollBox> ScrollBox;
-	TSharedPtr<SBorder> Border;
+	TSharedPtr<SVerticalBox> RootVerticalBox;
 
 public:
 	SLATE_BEGIN_ARGS(SMeshSelectionScrollBox)
