@@ -9,12 +9,18 @@
 
 #include "Engine/StaticMeshActor.h"
 
-AInteractiveArchController::AInteractiveArchController()
+AInteractiveArchController::AInteractiveArchController(): SpawnedMesh{ nullptr }, isUIHidden{ false }, idx{ 0 }
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
-	SpawnedMesh = nullptr;
-	isUIHidden = false;
+
+	PerspectivePawn = CreateDefaultSubobject<APerspectiveViewPawn>(TEXT("PerspectivePawn"));
+	OrthographicPawn = CreateDefaultSubobject<AOrthographicViewPawn>(TEXT("OrthographicPawn"));
+	IsometricPawn = CreateDefaultSubobject<AIsometricViewPawn>(TEXT("IsometricPawn"));
+
+	PawnReference.Add(PerspectivePawn->GetClass());
+	PawnReference.Add(OrthographicPawn->GetClass());
+	PawnReference.Add(IsometricPawn->GetClass());
 }
 
 void AInteractiveArchController::BeginPlay()
@@ -39,24 +45,28 @@ void AInteractiveArchController::BeginPlay()
 			SelectionWidget->ScrollBox3->OnTextureAssetThumbnailSelected.BindUObject(this, &AInteractiveArchController::ApplyTexture);
 		}
 	}
+
+	SwitchCameraView();
 }
 
 void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData)
 {
 	if (MeshData.StaticMesh)
 	{
-		if (LastHitLocation == CurrentHitLocation)
-		{
-			if (CurrentActor)
-				CurrentActor->Destroy();
-		}
-
-		LastHitLocation = CurrentHitLocation;
-
 		FBox BoundingBox = MeshData.StaticMesh->GetBoundingBox();
 		FVector MinBounds = BoundingBox.Min;
 		FVector MaxBounds = BoundingBox.Max;
 		float OffsetZ = MaxBounds.Z;
+		 
+		if(AMyStaticMeshActor* StaticMeshActor = Cast<AMyStaticMeshActor>(HitActor))
+		{
+			CurrentHitLocation = StaticMeshActor->GetActorLocation() - FVector(0, 0, OffsetZ);
+			StaticMeshActor->Destroy();
+		}
+		else if (LastHitLocation == CurrentHitLocation) {
+			CurrentActor->Destroy();
+		}
+		LastHitLocation = CurrentHitLocation;
 
 		FActorSpawnParameters SpawnParameters;
 		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -80,17 +90,6 @@ void AInteractiveArchController::ApplyMaterial(const FMaterialData& MaterialData
 		{
 			UStaticMeshComponent* StaticMeshComponent = CurrentActor->GetStaticMeshComponent();
 			StaticMeshComponent->SetMaterial(0, MaterialData.Material);
-
-			//DynamicMaterialInstance->SetScalarParameterValue(FName("Metallic"), MaterialData.MaterialMetallicity);
-			//DynamicMaterialInstance->SetScalarParameterValue(FName("Roughness"), MaterialData.MaterialRoughness);
-
-			//float metallicValue;
-
-			//FString FloatMessage = FString::Printf(TEXT("Metallic: %f"), DynamicMaterialInstance->GetScalarParameterValue(FName("Metallic"), metallicValue));
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FloatMessage);
-
-			//FloatMessage = FString::Printf(TEXT("Roughness: %f"), DynamicMaterialInstance->GetScalarParameterValue(FName("Roughness"), metallicValue));
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FloatMessage);
 		}
 
 	}
@@ -125,8 +124,13 @@ void AInteractiveArchController::SetupInputComponent()
 		ToggleVisibilityOfWidget->ValueType = EInputActionValueType::Boolean;
 		InputMappingContext->MapKey(ToggleVisibilityOfWidget, EKeys::Tab);
 
+		UInputAction* PossessPawn = NewObject<UInputAction>();
+		PossessPawn->ValueType = EInputActionValueType::Boolean;
+		InputMappingContext->MapKey(PossessPawn, EKeys::P);
+
 		EnhancedInputComponent->BindAction(ClickAction,ETriggerEvent::Triggered, this, &AInteractiveArchController::ProcessMouseClick);
 		EnhancedInputComponent->BindAction(ToggleVisibilityOfWidget, ETriggerEvent::Completed, this, &AInteractiveArchController::ToggleVisibility);
+		EnhancedInputComponent->BindAction(PossessPawn, ETriggerEvent::Completed, this, &AInteractiveArchController::SwitchCameraView);
 
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 		{
@@ -149,7 +153,8 @@ void AInteractiveArchController::ProcessMouseClick()
 
 		if (GetWorld()->LineTraceSingleByChannel(HitResult, WorldLocation, TraceEnd, ECC_Visibility, QueryParams))
 		{
-			if (AActor* HitActor = HitResult.GetActor())
+			HitActor = HitResult.GetActor();
+			if (HitActor)
 			{
 				if (AMyStaticMeshActor* StaticMeshActor = Cast<AMyStaticMeshActor>(HitActor)) {
 					SelectionWidget->ScrollBox1->SetVisibility(ESlateVisibility::Visible);
@@ -198,6 +203,39 @@ void AInteractiveArchController::ToggleVisibility()
 		{
 			SelectionWidget->SetVisibility(ESlateVisibility::Hidden);
 			isUIHidden = true;
+		}
+	}
+}
+
+void AInteractiveArchController::SwitchCameraView()
+{
+	if (idx == PawnReference.Num())
+	{
+		idx = 0;
+	}
+
+	TSubclassOf<APawn> PawnClass = PawnReference[idx++];
+	if (PawnClass)
+	{
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		if (GetPawn())
+		{
+			GetPawn()->Destroy();
+		}
+
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer())) {
+			Subsystem->ClearAllMappings();
+		}
+
+		APawn* SpawnedPawn = GetWorld()->SpawnActor<APawn>(PawnClass, LastHitLocation + FVector(0, 0, 200), FRotator::ZeroRotator, SpawnParams);
+		
+		SetupInputComponent();
+
+		if (SpawnedPawn)
+		{
+			Possess(SpawnedPawn);
 		}
 	}
 }
