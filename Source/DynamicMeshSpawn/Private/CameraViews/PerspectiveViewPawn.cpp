@@ -10,21 +10,25 @@ APerspectiveViewPawn::APerspectiveViewPawn()
 	PrimaryActorTick.bCanEverTick = true;
 
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
-	CapsuleComponent->SetCapsuleHalfHeight(50);
+	CapsuleComponent->SetCapsuleHalfHeight(25);
 	CapsuleComponent->SetCapsuleRadius(20);
 	CapsuleComponent->SetEnableGravity(false);
-	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	CapsuleComponent->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
-	CapsuleComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	RootComponent = CapsuleComponent;
 
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm Component"));
+	SpringArmComponent->TargetArmLength = 500.0f;
+	SpringArmComponent->bDoCollisionTest = false;
+	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->bUsePawnControlRotation = true;
+	SpringArmComponent->bEnableCameraLag = true;
+	SpringArmComponent->bEnableCameraRotationLag = true;
+	SpringArmComponent->CameraLagSpeed = 5.0f;
+	SpringArmComponent->CameraRotationLagSpeed = 30.0f;
+
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera Component"));
-	CameraComponent->SetupAttachment(CapsuleComponent);
+	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
 
 	FloatingPawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingPawnMovement"));
-	bUseControllerRotationYaw = true;
-	bUseControllerRotationPitch = true;
-	bUseControllerRotationRoll = false;
 
 }
 

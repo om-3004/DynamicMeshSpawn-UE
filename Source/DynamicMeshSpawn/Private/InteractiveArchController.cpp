@@ -9,18 +9,16 @@
 
 #include "Engine/StaticMeshActor.h"
 
-AInteractiveArchController::AInteractiveArchController(): SpawnedMesh{ nullptr }, isUIHidden{ false }, idx{ 0 }
+AInteractiveArchController::AInteractiveArchController()
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
+	isUIHidden = false ;
+	idx = 0;
 
-	PerspectivePawn = CreateDefaultSubobject<APerspectiveViewPawn>(TEXT("PerspectivePawn"));
-	OrthographicPawn = CreateDefaultSubobject<AOrthographicViewPawn>(TEXT("OrthographicPawn"));
-	IsometricPawn = CreateDefaultSubobject<AIsometricViewPawn>(TEXT("IsometricPawn"));
-
-	PawnReference.Add(PerspectivePawn->GetClass());
-	PawnReference.Add(OrthographicPawn->GetClass());
-	PawnReference.Add(IsometricPawn->GetClass());
+	PawnReference.Add(PerspectivePawn->StaticClass());
+	PawnReference.Add(OrthographicPawn->StaticClass());
+	PawnReference.Add(IsometricPawn->StaticClass());
 }
 
 void AInteractiveArchController::BeginPlay()
@@ -58,13 +56,14 @@ void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData
 		FVector MaxBounds = BoundingBox.Max;
 		float OffsetZ = MaxBounds.Z;
 		 
-		if(AMyStaticMeshActor* StaticMeshActor = Cast<AMyStaticMeshActor>(HitActor))
-		{
+		if (LastHitLocation == CurrentHitLocation) {
+			if (CurrentActor) {
+				CurrentActor->Destroy();
+			}
+		}
+		else if (AMyStaticMeshActor* StaticMeshActor = Cast<AMyStaticMeshActor>(HitActor)) {
 			CurrentHitLocation = StaticMeshActor->GetActorLocation() - FVector(0, 0, OffsetZ);
 			StaticMeshActor->Destroy();
-		}
-		else if (LastHitLocation == CurrentHitLocation) {
-			CurrentActor->Destroy();
 		}
 		LastHitLocation = CurrentHitLocation;
 
@@ -76,6 +75,11 @@ void AInteractiveArchController::SpawnMeshFromMeshData(const FMeshData& MeshData
 		{
 			CurrentActor->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
 			CurrentActor->GetStaticMeshComponent()->SetStaticMesh(MeshData.StaticMesh);
+		}
+
+		if (GetPawn())
+		{
+			GetPawn()->SetActorLocation(CurrentHitLocation + FVector{0, 0, 200});
 		}
 	}
 }
@@ -128,7 +132,7 @@ void AInteractiveArchController::SetupInputComponent()
 		PossessPawn->ValueType = EInputActionValueType::Boolean;
 		InputMappingContext->MapKey(PossessPawn, EKeys::P);
 
-		EnhancedInputComponent->BindAction(ClickAction,ETriggerEvent::Triggered, this, &AInteractiveArchController::ProcessMouseClick);
+		EnhancedInputComponent->BindAction(ClickAction,ETriggerEvent::Completed, this, &AInteractiveArchController::ProcessMouseClick);
 		EnhancedInputComponent->BindAction(ToggleVisibilityOfWidget, ETriggerEvent::Completed, this, &AInteractiveArchController::ToggleVisibility);
 		EnhancedInputComponent->BindAction(PossessPawn, ETriggerEvent::Completed, this, &AInteractiveArchController::SwitchCameraView);
 
@@ -161,6 +165,10 @@ void AInteractiveArchController::ProcessMouseClick()
 					SelectionWidget->ScrollBox2->SetVisibility(ESlateVisibility::Visible);
 					SelectionWidget->ScrollBox3->SetVisibility(ESlateVisibility::Visible);
 					CurrentActor = StaticMeshActor;
+					if (GetPawn())
+					{
+						GetPawn()->SetActorLocation(HitActor->GetActorLocation() + FVector{0, 0, 200});
+					}
 				}
 				else {
 					if (SelectionWidget->ScrollBox1->TypeOfAsset == EAssetType::MeshData) {

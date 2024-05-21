@@ -21,6 +21,9 @@ class DYNAMICMESHSPAWN_API APerspectiveViewPawn : public APawn
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
 	class UCapsuleComponent* CapsuleComponent;
+	
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
+	class USpringArmComponent* SpringArmComponent;
 
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* CameraComponent;

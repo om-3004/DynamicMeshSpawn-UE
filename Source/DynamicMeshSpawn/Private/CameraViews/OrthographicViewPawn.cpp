@@ -18,8 +18,13 @@ AOrthographicViewPawn::AOrthographicViewPawn()
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->TargetArmLength = 0.0f;
 	SpringArmComponent->TargetOffset = FVector(0, 0, 600);
 	SpringArmComponent->bUsePawnControlRotation = true;
+	SpringArmComponent->bEnableCameraLag = true;
+	SpringArmComponent->bEnableCameraRotationLag = true;
+	SpringArmComponent->CameraLagSpeed = 5.0f;
+	SpringArmComponent->CameraRotationLagSpeed = 30.0f;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComponent->SetRelativeRotation(FRotator(-90.f, 0, 0));

@@ -39,7 +39,6 @@ class DYNAMICMESHSPAWN_API AInteractiveArchController : public APlayerController
 {
 	GENERATED_BODY()
 
-	AMyStaticMeshActor* SpawnedMesh;
 	APerspectiveViewPawn* PerspectivePawn;
 	AOrthographicViewPawn* OrthographicPawn;
 	AIsometricViewPawn* IsometricPawn;
@@ -48,9 +47,10 @@ class DYNAMICMESHSPAWN_API AInteractiveArchController : public APlayerController
 
 	UPROPERTY(VisibleDefaultsOnly, meta = (AlloPrivateAccess = "true"))
 	int8 idx;
-
-	AActor* HitActor;
 	
+	UPROPERTY(VisibleDefaultsOnly, meta = (AlloPrivateAccess = "true"))
+	AActor* HitActor;
+
 protected:
 	AInteractiveArchController();
 
@@ -65,7 +65,9 @@ protected:
 
 	UFUNCTION()
 	void SpawnMeshFromMeshData(const FMeshData& MeshData);
+	UFUNCTION()
 	void ApplyMaterial(const FMaterialData& MaterialData);
+	UFUNCTION()
 	void ApplyTexture(const FTextureData& TextureData);
 
 	UPROPERTY()
