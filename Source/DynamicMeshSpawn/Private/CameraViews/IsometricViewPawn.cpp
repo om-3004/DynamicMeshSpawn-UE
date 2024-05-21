@@ -16,6 +16,7 @@ AIsometricViewPawn::AIsometricViewPawn()
 	SpringArmComponent->SetupAttachment(SceneRoot);
 	SpringArmComponent->SetRelativeRotation(FRotator{ -45.0, 45.0, 0.0 });
 	SpringArmComponent->TargetArmLength = 2500;
+	SpringArmComponent->bDoCollisionTest = false;
 	SpringArmComponent->bEnableCameraLag = true;
 	SpringArmComponent->bEnableCameraRotationLag = true;
 	SpringArmComponent->CameraLagSpeed = 5.0f;
